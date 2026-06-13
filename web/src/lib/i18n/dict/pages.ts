@@ -1,0 +1,246 @@
+/**
+ * Strings for the dashboard, leaderboard, study-tools and subjects pages.
+ * Keys are prefixed by page. Generic actions/states live in `./common.ts`;
+ * platform content (subjects, achievements, levels) is handled via `tContent`.
+ */
+export const en = {
+  // ─── Dashboard ───────────────────────────────────────────────
+  "dashboard.welcomeBack": "Welcome back, {name}",
+  "dashboard.subtitle": "Here's how your notes are performing",
+  "dashboard.uploadNote": "Upload Note",
+  "dashboard.levelLabel": "Level {level} — {name}",
+  "dashboard.pointsToNext": "{points} points to Level {level}",
+  "dashboard.maxLevel": "Maximum level reached — legend!",
+  "dashboard.pointsBadge": "{points} points",
+  "dashboard.stat.notes": "Notes",
+  "dashboard.stat.downloads": "Downloads",
+  "dashboard.stat.views": "Views",
+  "dashboard.stat.likes": "Likes",
+  "dashboard.stat.bookmarks": "Bookmarks",
+  "dashboard.stat.points": "Points",
+  "dashboard.analyticsTitle": "Last 30 Days — Downloads & Uploads",
+  "dashboard.myNotes": "My Notes",
+  "dashboard.totalCount": "{count} total",
+  "dashboard.noteStats": "{downloads} downloads · {views} views · ",
+  "dashboard.deleteNote": "Delete {title}",
+  "dashboard.status.FLAGGED": "Flagged",
+  "dashboard.status.REMOVED": "Removed",
+  "dashboard.noNotesTitle": "No notes yet",
+  "dashboard.noNotesDesc": "Your uploaded notes will appear here.",
+  "dashboard.recentActivity": "Recent Activity",
+  "dashboard.noActivity": "No activity yet — share a note to get started!",
+  "dashboard.toast.noteDeleted": "Note deleted",
+
+  // ─── Leaderboard ─────────────────────────────────────────────
+  "leaderboard.title": "Contributor Leaderboard",
+  "leaderboard.subtitle": "Top students ranked by contribution points",
+  "leaderboard.notesCount": "{count} notes",
+  "leaderboard.followersCount": "{count} followers",
+  "leaderboard.levelBadge": "Lv.{level} {name}",
+
+  // ─── Study Tools ─────────────────────────────────────────────
+  "studyTools.title": "Study Tools",
+  "studyTools.subtitle":
+    "Stay focused and on schedule with countdowns, planning and deep-work sessions",
+
+  // Exam countdown
+  "studyTools.exam.title": "Exam Countdown",
+  "studyTools.exam.titlePlaceholder": "e.g. HSC Exam",
+  "studyTools.exam.dateLabel": "Exam date",
+  "studyTools.exam.addExam": "Add exam",
+  "studyTools.exam.empty": "No exams yet — add one to start the countdown.",
+  "studyTools.exam.days": "days",
+  "studyTools.exam.deleteExam": "Delete {title}",
+
+  // Study planner
+  "studyTools.planner.title": "Study Planner",
+  "studyTools.planner.progress": "Progress",
+  "studyTools.planner.goalPlaceholder": "e.g. Revise Physics Ch. 4",
+  "studyTools.planner.goalType": "Goal type",
+  "studyTools.planner.daily": "Daily",
+  "studyTools.planner.weekly": "Weekly",
+  "studyTools.planner.addGoal": "Add goal",
+  "studyTools.planner.markComplete": "Mark complete",
+  "studyTools.planner.markIncomplete": "Mark incomplete",
+  "studyTools.planner.deleteGoal": "Delete goal",
+  "studyTools.planner.dailyGoals": "Daily goals",
+  "studyTools.planner.weeklyGoals": "Weekly goals",
+  "studyTools.planner.empty": "No goals yet — plan your study session above.",
+
+  // Pomodoro
+  "studyTools.pomodoro.title": "Pomodoro Timer",
+  "studyTools.pomodoro.focus": "Focus",
+  "studyTools.pomodoro.break": "Break",
+  "studyTools.pomodoro.start": "Start",
+  "studyTools.pomodoro.pause": "Pause",
+  "studyTools.pomodoro.resetTimer": "Reset timer",
+  "studyTools.pomodoro.summary":
+    "Last 7 days: {sessions} sessions · {minutes} focused minutes",
+  "studyTools.pomodoro.toast.focusDone": "Focus session complete! Take a break",
+  "studyTools.pomodoro.toast.breakOver": "Break over — ready for another round?",
+
+  // To-dos
+  "studyTools.todos.title": "My To-Dos",
+  "studyTools.todos.counts": "{open} open · {done} done",
+  "studyTools.todos.cat.notes": "Notes",
+  "studyTools.todos.cat.homework": "Homework",
+  "studyTools.todos.cat.problems": "Problems",
+  "studyTools.todos.cat.scratch": "Scratch",
+  "studyTools.todos.priority.high": "High",
+  "studyTools.todos.priority.medium": "Medium",
+  "studyTools.todos.priority.low": "Low",
+  "studyTools.todos.overdue": "{days}d overdue",
+  "studyTools.todos.dueToday": "Due today",
+  "studyTools.todos.dueTomorrow": "Due tomorrow",
+  "studyTools.todos.dueIn": "Due in {days}d",
+  "studyTools.todos.markComplete": "Mark complete",
+  "studyTools.todos.markIncomplete": "Mark incomplete",
+  "studyTools.todos.deleteTodo": "Delete to-do",
+  "studyTools.todos.titlePlaceholder": "Add a task, assignment or scratch note…",
+  "studyTools.todos.categoryLabel": "Category",
+  "studyTools.todos.priorityLabel": "Priority",
+  "studyTools.todos.dueDateLabel": "Due date (optional)",
+  "studyTools.todos.addTodo": "Add to-do",
+  "studyTools.todos.emptyCategory": "Nothing here in this category.",
+  "studyTools.todos.empty": "No to-dos yet — add your first task above.",
+  "studyTools.todos.clearCompleted": "Clear {count} completed",
+
+  // Progress tracker
+  "studyTools.progress.title": "Progress Tracker",
+  "studyTools.progress.complete": "{done}/{total} complete",
+  "studyTools.progress.goals": "Goals",
+  "studyTools.progress.todosDone": "To-dos done",
+  "studyTools.progress.focus7Days": "Focus · 7 days",
+  "studyTools.progress.nextExam": "Next exam",
+  "studyTools.progress.exams": "Exams",
+  "studyTools.progress.done": "done",
+  "studyTools.progress.examDays": "{days}d",
+
+  // ─── Subjects ────────────────────────────────────────────────
+  "subjects.title": "All Subjects",
+  "subjects.subtitle": "Pick a subject to explore community notes",
+  "subjects.notesCount": "{count} notes",
+  "subjects.groupCount_one": "{count} problem-solving group",
+  "subjects.groupCount_other": "{count} problem-solving groups",
+} as const;
+
+export const bn: Record<keyof typeof en, string> = {
+  // ─── Dashboard ───────────────────────────────────────────────
+  "dashboard.welcomeBack": "স্বাগতম, {name}",
+  "dashboard.subtitle": "আপনার নোটগুলো কেমন করছে দেখে নিন",
+  "dashboard.uploadNote": "নোট আপলোড করুন",
+  "dashboard.levelLabel": "লেভেল {level} — {name}",
+  "dashboard.pointsToNext": "লেভেল {level}-এ পৌঁছাতে {points} পয়েন্ট বাকি",
+  "dashboard.maxLevel": "সর্বোচ্চ লেভেলে পৌঁছে গেছেন — কিংবদন্তি!",
+  "dashboard.pointsBadge": "{points} পয়েন্ট",
+  "dashboard.stat.notes": "নোট",
+  "dashboard.stat.downloads": "ডাউনলোড",
+  "dashboard.stat.views": "ভিউ",
+  "dashboard.stat.likes": "লাইক",
+  "dashboard.stat.bookmarks": "বুকমার্ক",
+  "dashboard.stat.points": "পয়েন্ট",
+  "dashboard.analyticsTitle": "গত ৩০ দিন — ডাউনলোড ও আপলোড",
+  "dashboard.myNotes": "আমার নোট",
+  "dashboard.totalCount": "মোট {count}টি",
+  "dashboard.noteStats": "{downloads}টি ডাউনলোড · {views}টি ভিউ · ",
+  "dashboard.deleteNote": "{title} মুছুন",
+  "dashboard.status.FLAGGED": "চিহ্নিত",
+  "dashboard.status.REMOVED": "অপসারিত",
+  "dashboard.noNotesTitle": "এখনও কোনো নোট নেই",
+  "dashboard.noNotesDesc": "আপনার আপলোড করা নোট এখানে দেখা যাবে।",
+  "dashboard.recentActivity": "সাম্প্রতিক কার্যকলাপ",
+  "dashboard.noActivity": "এখনও কোনো কার্যকলাপ নেই — শুরু করতে একটি নোট শেয়ার করুন!",
+  "dashboard.toast.noteDeleted": "নোট মুছে ফেলা হয়েছে",
+
+  // ─── Leaderboard ─────────────────────────────────────────────
+  "leaderboard.title": "অবদানকারী লিডারবোর্ড",
+  "leaderboard.subtitle": "অবদান পয়েন্ট অনুযায়ী শীর্ষ শিক্ষার্থীরা",
+  "leaderboard.notesCount": "{count}টি নোট",
+  "leaderboard.followersCount": "{count} জন অনুসরণকারী",
+  "leaderboard.levelBadge": "লেভেল {level} {name}",
+
+  // ─── Study Tools ─────────────────────────────────────────────
+  "studyTools.title": "স্টাডি টুলস",
+  "studyTools.subtitle":
+    "কাউন্টডাউন, পরিকল্পনা ও গভীর মনোযোগের সেশনের মাধ্যমে মনোযোগী ও সময়মতো থাকুন",
+
+  // Exam countdown
+  "studyTools.exam.title": "পরীক্ষার কাউন্টডাউন",
+  "studyTools.exam.titlePlaceholder": "যেমন এইচএসসি পরীক্ষা",
+  "studyTools.exam.dateLabel": "পরীক্ষার তারিখ",
+  "studyTools.exam.addExam": "পরীক্ষা যোগ করুন",
+  "studyTools.exam.empty": "এখনও কোনো পরীক্ষা নেই — কাউন্টডাউন শুরু করতে একটি যোগ করুন।",
+  "studyTools.exam.days": "দিন",
+  "studyTools.exam.deleteExam": "{title} মুছুন",
+
+  // Study planner
+  "studyTools.planner.title": "স্টাডি প্ল্যানার",
+  "studyTools.planner.progress": "অগ্রগতি",
+  "studyTools.planner.goalPlaceholder": "যেমন পদার্থবিজ্ঞান অধ্যায় ৪ পুনরায় পড়া",
+  "studyTools.planner.goalType": "লক্ষ্যের ধরন",
+  "studyTools.planner.daily": "দৈনিক",
+  "studyTools.planner.weekly": "সাপ্তাহিক",
+  "studyTools.planner.addGoal": "লক্ষ্য যোগ করুন",
+  "studyTools.planner.markComplete": "সম্পন্ন হিসেবে চিহ্নিত করুন",
+  "studyTools.planner.markIncomplete": "অসম্পূর্ণ হিসেবে চিহ্নিত করুন",
+  "studyTools.planner.deleteGoal": "লক্ষ্য মুছুন",
+  "studyTools.planner.dailyGoals": "দৈনিক লক্ষ্য",
+  "studyTools.planner.weeklyGoals": "সাপ্তাহিক লক্ষ্য",
+  "studyTools.planner.empty": "এখনও কোনো লক্ষ্য নেই — উপরে আপনার পড়াশোনার পরিকল্পনা করুন।",
+
+  // Pomodoro
+  "studyTools.pomodoro.title": "পমোডোরো টাইমার",
+  "studyTools.pomodoro.focus": "মনোযোগ",
+  "studyTools.pomodoro.break": "বিরতি",
+  "studyTools.pomodoro.start": "শুরু",
+  "studyTools.pomodoro.pause": "থামান",
+  "studyTools.pomodoro.resetTimer": "টাইমার রিসেট করুন",
+  "studyTools.pomodoro.summary":
+    "গত ৭ দিন: {sessions}টি সেশন · {minutes} মিনিট মনোযোগ",
+  "studyTools.pomodoro.toast.focusDone": "মনোযোগের সেশন সম্পন্ন! একটু বিরতি নিন",
+  "studyTools.pomodoro.toast.breakOver": "বিরতি শেষ — আরেক রাউন্ডের জন্য প্রস্তুত?",
+
+  // To-dos
+  "studyTools.todos.title": "আমার করণীয়",
+  "studyTools.todos.counts": "{open}টি বাকি · {done}টি সম্পন্ন",
+  "studyTools.todos.cat.notes": "নোট",
+  "studyTools.todos.cat.homework": "বাড়ির কাজ",
+  "studyTools.todos.cat.problems": "সমস্যা",
+  "studyTools.todos.cat.scratch": "খসড়া",
+  "studyTools.todos.priority.high": "উচ্চ",
+  "studyTools.todos.priority.medium": "মাঝারি",
+  "studyTools.todos.priority.low": "নিম্ন",
+  "studyTools.todos.overdue": "{days} দিন পার হয়ে গেছে",
+  "studyTools.todos.dueToday": "আজ শেষ সময়",
+  "studyTools.todos.dueTomorrow": "আগামীকাল শেষ সময়",
+  "studyTools.todos.dueIn": "{days} দিন বাকি",
+  "studyTools.todos.markComplete": "সম্পন্ন হিসেবে চিহ্নিত করুন",
+  "studyTools.todos.markIncomplete": "অসম্পূর্ণ হিসেবে চিহ্নিত করুন",
+  "studyTools.todos.deleteTodo": "করণীয় মুছুন",
+  "studyTools.todos.titlePlaceholder": "একটি কাজ, অ্যাসাইনমেন্ট বা খসড়া নোট যোগ করুন…",
+  "studyTools.todos.categoryLabel": "বিভাগ",
+  "studyTools.todos.priorityLabel": "অগ্রাধিকার",
+  "studyTools.todos.dueDateLabel": "শেষ তারিখ (ঐচ্ছিক)",
+  "studyTools.todos.addTodo": "করণীয় যোগ করুন",
+  "studyTools.todos.emptyCategory": "এই বিভাগে কিছু নেই।",
+  "studyTools.todos.empty": "এখনও কোনো করণীয় নেই — উপরে আপনার প্রথম কাজটি যোগ করুন।",
+  "studyTools.todos.clearCompleted": "{count}টি সম্পন্ন মুছুন",
+
+  // Progress tracker
+  "studyTools.progress.title": "অগ্রগতি ট্র্যাকার",
+  "studyTools.progress.complete": "{done}/{total} সম্পন্ন",
+  "studyTools.progress.goals": "লক্ষ্য",
+  "studyTools.progress.todosDone": "করণীয় সম্পন্ন",
+  "studyTools.progress.focus7Days": "মনোযোগ · ৭ দিন",
+  "studyTools.progress.nextExam": "পরবর্তী পরীক্ষা",
+  "studyTools.progress.exams": "পরীক্ষা",
+  "studyTools.progress.done": "সম্পন্ন",
+  "studyTools.progress.examDays": "{days} দিন",
+
+  // ─── Subjects ────────────────────────────────────────────────
+  "subjects.title": "সকল বিষয়",
+  "subjects.subtitle": "কমিউনিটি নোট অন্বেষণ করতে একটি বিষয় বেছে নিন",
+  "subjects.notesCount": "{count}টি নোট",
+  "subjects.groupCount_one": "{count}টি সমস্যা-সমাধান গ্রুপ",
+  "subjects.groupCount_other": "{count}টি সমস্যা-সমাধান গ্রুপ",
+};

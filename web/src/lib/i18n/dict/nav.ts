@@ -1,0 +1,36 @@
+/** Navbar + global navigation strings. */
+export const en = {
+  "nav.browseNotes": "Browse Notes",
+  "nav.groups": "Problem Solving",
+  "nav.subjects": "Subjects",
+  "nav.leaderboard": "Leaderboard",
+  "nav.studyTools": "Study Tools",
+  "nav.syllabus": "Syllabus",
+  "nav.notifications": "Notifications",
+  "nav.uploadNotes": "Upload Notes",
+  "nav.accountMenu": "Account menu",
+  "nav.toggleMenu": "Toggle menu",
+  "nav.dashboard": "Dashboard",
+  "nav.myProfile": "My Profile",
+  "nav.bookmarks": "Bookmarks",
+  "nav.settings": "Settings",
+  "nav.adminPanel": "Admin Panel",
+} as const;
+
+export const bn: Record<keyof typeof en, string> = {
+  "nav.browseNotes": "নোট ব্রাউজ করুন",
+  "nav.groups": "সমস্যা সমাধান",
+  "nav.subjects": "বিষয়সমূহ",
+  "nav.leaderboard": "লিডারবোর্ড",
+  "nav.studyTools": "পড়াশোনার টুলস",
+  "nav.syllabus": "সিলেবাস",
+  "nav.notifications": "নোটিফিকেশন",
+  "nav.uploadNotes": "নোট আপলোড করুন",
+  "nav.accountMenu": "অ্যাকাউন্ট মেনু",
+  "nav.toggleMenu": "মেনু টগল করুন",
+  "nav.dashboard": "ড্যাশবোর্ড",
+  "nav.myProfile": "আমার প্রোফাইল",
+  "nav.bookmarks": "বুকমার্ক",
+  "nav.settings": "সেটিংস",
+  "nav.adminPanel": "অ্যাডমিন প্যানেল",
+};

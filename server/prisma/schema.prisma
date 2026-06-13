@@ -1,0 +1,525 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// NOTE: SQLite does not support Prisma enums, so these are stored as plain
+// strings. Allowed values are kept in sync with the app code:
+//   Role             -> "STUDENT" | "ADMIN"
+//   NoteType         -> "PDF" | "IMAGE" | "HANDWRITTEN"
+//   NoteStatus       -> "PUBLISHED" | "FLAGGED" | "REMOVED"
+//   ReportStatus     -> "OPEN" | "RESOLVED" | "DISMISSED"
+//   NotificationType -> "LIKE" | "COMMENT" | "REPLY" | "MENTION" | "RATING"
+//                       | "FOLLOW" | "DOWNLOAD" | "ACHIEVEMENT" | "SYSTEM"
+//                       | "GROUP_POST" | "PROBLEM_REPLY" | "PROBLEM_SOLVED"
+//   GoalType         -> "DAILY" | "WEEKLY"
+//   GroupRole        -> "OWNER" | "MODERATOR" | "MEMBER"
+//   ProblemStatus    -> "OPEN" | "SOLVED"
+//   SyllabusStatus   -> "PUBLISHED" | "ARCHIVED"
+//   TodoCategory     -> "NOTE" | "HOMEWORK" | "PROBLEM" | "SCRATCH"
+//   TodoPriority     -> "LOW" | "MEDIUM" | "HIGH"
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  username      String   @unique
+  email         String   @unique
+  passwordHash  String?
+  googleId      String?  @unique
+  avatarUrl     String?
+  coverUrl      String?
+  bio           String?
+  institution   String?
+  location      String?
+  website       String?
+  course        String?
+  gradYear      Int?
+  interests     String   @default("[]") // JSON-encoded string[] (SQLite has no array type)
+  twitter       String?
+  github        String?
+  linkedin      String?
+  role          String   @default("STUDENT")
+  locale        String   @default("en") // preferred UI/email language: "en" | "bn"
+  emailVerified Boolean  @default(true)
+  isBlocked     Boolean  @default(false)
+  points        Int      @default(0)
+  level         Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  verifyToken   String?   @unique
+  resetToken    String?   @unique
+  resetTokenExp DateTime?
+
+  notes         Note[]
+  ratings       Rating[]
+  likes         Like[]
+  bookmarks     Bookmark[]
+  comments      Comment[]
+  downloads     Download[]
+  refreshTokens RefreshToken[]
+  achievements  UserAchievement[]
+  reports       Report[]
+  notifications Notification[]    @relation("recipient")
+  actedNotifs   Notification[]    @relation("actor")
+  followers     Follow[]          @relation("following")
+  following     Follow[]          @relation("follower")
+  exams         Exam[]
+  goals         StudyGoal[]
+  pomodoros     PomodoroSession[]
+
+  createdGroups    ProblemGroup[]
+  groupMemberships GroupMember[]
+  problems         Problem[]
+  problemMessages  ProblemMessage[]
+
+  createdSyllabi   Syllabus[]         @relation("syllabusAuthor")
+  syllabusTracks   SyllabusTrack[]
+  syllabusProgress SyllabusProgress[]
+
+  todos Todo[]
+
+  @@index([points])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Subject {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  icon        String
+  coverImage  String?
+  description String
+  notes       Note[]
+  groups      ProblemGroup[]
+  problems    Problem[]
+  syllabi     Syllabus[]
+}
+
+model Note {
+  id           String     @id @default(cuid())
+  title        String
+  description  String
+  chapter      String
+  tags         String     @default("[]") // JSON-encoded string[] (SQLite has no array type)
+  type         String
+  status       String     @default("PUBLISHED")
+  isOfficial   Boolean    @default(false) // admin-curated resources (textbooks, class notes) — ranked top
+  fileUrl      String
+  fileType     String
+  fileSize     Int
+  fileHash     String
+  thumbnailUrl String?
+  className    String?
+  board        String?
+  college      String?
+  teacherName  String?
+
+  views          Int   @default(0)
+  downloadsCount Int   @default(0)
+  likesCount     Int   @default(0)
+  avgRating      Float @default(0)
+  ratingsCount   Int   @default(0)
+  commentsCount  Int   @default(0)
+
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  authorId  String
+  author    User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ratings   Rating[]
+  likes     Like[]
+  bookmarks Bookmark[]
+  comments  Comment[]
+  downloads Download[]
+  reports   Report[]
+  todos     Todo[]
+
+  @@index([subjectId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([isOfficial])
+  @@index([downloadsCount])
+  @@index([avgRating])
+  @@index([authorId, fileHash])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  value     Int
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, noteId])
+  @@index([noteId])
+}
+
+model Like {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, noteId])
+  @@index([noteId])
+}
+
+model Bookmark {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([userId, noteId])
+  @@index([userId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  content   String
+  isHidden  Boolean   @default(false)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  noteId    String
+  note      Note      @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("replies")
+  reports   Report[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([noteId])
+  @@index([parentId])
+}
+
+model Download {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  noteId    String
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([noteId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      String
+  // i18n: the client renders `messageKey` (a `notif.*` template) with
+  // `messageParams` (JSON). `message` is a legacy/fallback English string for
+  // rows created before i18n templating.
+  message       String?
+  messageKey    String?
+  messageParams String?
+  link      String?
+  read      Boolean          @default(false)
+  userId    String
+  user      User             @relation("recipient", fields: [userId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     User?            @relation("actor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model Achievement {
+  id          String            @id @default(cuid())
+  code        String            @unique
+  name        String
+  description String
+  icon        String
+  users       UserAchievement[]
+}
+
+model UserAchievement {
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  earnedAt      DateTime    @default(now())
+
+  @@id([userId, achievementId])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reason     String
+  details    String?
+  status     String       @default("OPEN")
+  reporterId String
+  reporter   User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  noteId     String?
+  note       Note?        @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  commentId  String?
+  comment    Comment?     @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  problemId  String?
+  problem    Problem?     @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  createdAt  DateTime     @default(now())
+
+  @@index([status])
+}
+
+model Follow {
+  followerId  String
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+}
+
+model Exam {
+  id        String   @id @default(cuid())
+  title     String
+  date      DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model StudyGoal {
+  id        String   @id @default(cuid())
+  title     String
+  type      String   @default("DAILY")
+  done      Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PomodoroSession {
+  id        String   @id @default(cuid())
+  minutes   Int
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// Collaborative "problem solving" spaces. Anyone can browse/search; joining
+// (GroupMember) is required to post problems or chat.
+model ProblemGroup {
+  id            String  @id @default(cuid())
+  name          String
+  slug          String  @unique
+  description   String
+  tags          String  @default("[]") // JSON-encoded string[] (SQLite has no array type)
+  membersCount  Int     @default(1)
+  problemsCount Int     @default(0)
+
+  subjectId String?
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  creatorId String
+  creator   User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  GroupMember[]
+  problems Problem[]
+
+  @@index([subjectId])
+  @@index([createdAt])
+}
+
+model GroupMember {
+  groupId   String
+  group     ProblemGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String       @default("MEMBER") // OWNER | MODERATOR | MEMBER
+  createdAt DateTime     @default(now())
+
+  @@id([groupId, userId])
+  @@index([userId])
+}
+
+model Problem {
+  id            String @id @default(cuid())
+  title         String
+  body          String
+  tags          String @default("[]") // JSON-encoded string[]
+  status        String @default("OPEN") // OPEN | SOLVED
+  views         Int    @default(0)
+  messagesCount Int    @default(0)
+  // The ProblemMessage marked as the accepted solution (no FK relation to keep
+  // it nullable without a circular cascade; resolved by id when needed).
+  solutionMessageId String?
+
+  groupId   String
+  group     ProblemGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  subjectId String?
+  subject   Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages ProblemMessage[]
+  reports  Report[]
+  todos    Todo[]
+
+  @@index([groupId])
+  @@index([authorId])
+  @@index([subjectId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model ProblemMessage {
+  id         String   @id @default(cuid())
+  content    String   @default("") // may be empty when the message is an attachment only
+  isSolution Boolean  @default(false)
+
+  // Optional single file attachment (image / PDF / document). Stored on the
+  // local filesystem under /uploads/problems and served via the static route.
+  attachmentUrl  String?
+  attachmentName String? // original filename, kept for display + download
+  attachmentType String? // canonical MIME (see middleware/upload inspectFile)
+  attachmentSize Int?
+
+  problemId  String
+  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([problemId])
+  @@index([createdAt])
+}
+
+// Official curriculum syllabus uploaded by an admin ("official"). Students
+// track a syllabus and tick off its topics to follow their own progress.
+model Syllabus {
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  className   String?
+  board       String?
+  status      String  @default("PUBLISHED") // PUBLISHED | ARCHIVED
+
+  // Optional source document (PDF/image) the topics were derived from.
+  fileUrl  String?
+  fileType String?
+  fileSize Int?
+
+  subjectId   String
+  subject     Subject @relation(fields: [subjectId], references: [id])
+  createdById String
+  createdBy   User    @relation("syllabusAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  topics SyllabusTopic[]
+  tracks SyllabusTrack[]
+
+  @@index([subjectId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SyllabusTopic {
+  id         String   @id @default(cuid())
+  title      String
+  order      Int      @default(0)
+  syllabusId String
+  syllabus   Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+
+  progress SyllabusProgress[]
+
+  @@index([syllabusId])
+}
+
+// A student enrolling to follow a syllabus.
+model SyllabusTrack {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  syllabusId String
+  syllabus   Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, syllabusId])
+  @@index([syllabusId])
+}
+
+// A student having completed a single topic. Presence of a row == done.
+model SyllabusProgress {
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicId     String
+  topic       SyllabusTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  completedAt DateTime      @default(now())
+
+  @@id([userId, topicId])
+  @@index([topicId])
+}
+
+// A student's private to-do / tracking item. Category buckets it into the work
+// it relates to: a note to review, a homework assignment, a problem to solve,
+// or a free-form "scratch" jotting. NOTE/PROBLEM items may optionally link to
+// the relevant resource; the link is cleared (SetNull) if that resource is
+// removed so the personal item survives.
+model Todo {
+  id        String    @id @default(cuid())
+  title     String
+  details   String? // optional longer note / scratch body
+  category  String    @default("SCRATCH") // NOTE | HOMEWORK | PROBLEM | SCRATCH
+  priority  String    @default("MEDIUM") // LOW | MEDIUM | HIGH
+  done      Boolean   @default(false)
+  dueDate   DateTime?
+  position  Int       @default(0) // manual ordering within a category
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  noteId String?
+  note   Note?   @relation(fields: [noteId], references: [id], onDelete: SetNull)
+
+  problemId String?
+  problem   Problem? @relation(fields: [problemId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, done])
+  @@index([userId, category])
+  @@index([noteId])
+  @@index([problemId])
+}

@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.next/
+out/
+*.log
+.env
+.env.local
+.env*.local
+uploads/
+.DS_Store
+
+# SQLite database files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+coverage/
+.turbo/
+prisma/migrations/**/migration_lock.toml
