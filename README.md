@@ -30,25 +30,24 @@ A production-grade full-stack platform where students upload, discover, rate, bo
 **Prerequisites:** Node.js ≥ 20 — that's it. The database is file-based SQLite, so no Docker or external DB server is required.
 
 ```bash
-# 1. Install dependencies (root, server, web — npm workspaces)
-npm install
-
-# 2. Configure the API
-cp server/.env.example server/.env       # defaults work for local dev
-
-# 3. Create the schema & seed (subjects, achievements, admin user)
-npm run db:migrate -w server             # creates server/prisma/dev.db
-npm run db:seed -w server
-
-# 4. Configure the frontend
-cp web/.env.example web/.env.local
-
-# 5. Run both apps
+git clone https://github.com/JannatinNaim/student-management-platform.git
+cd student-management-platform
 npm run dev
 ```
 
+That single `npm run dev` is the whole setup. On first run it bootstraps everything automatically (and skips each step on later runs):
+
+1. installs dependencies (root + server + web via npm workspaces)
+2. creates `server/.env` and `web/.env.local` from the committed `.example` templates
+3. generates the Prisma client
+4. applies migrations — creates `server/prisma/dev.db`
+5. seeds reference data (subjects, achievements, admin user)
+6. starts the API and web app together
+
 - Web: **http://localhost:3000**
 - API: **http://localhost:4000** (health check at `/health`)
+
+> The bootstrap is idempotent — run `npm run setup` any time to re-sync deps/env/db without starting the servers. The same bootstrap runs before `npm run build` and `npm run start` too.
 
 ### Default accounts (after seeding)
 
