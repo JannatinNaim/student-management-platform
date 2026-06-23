@@ -34,6 +34,27 @@ export const env = {
 
   maxFileSizeMb: Number(process.env.MAX_FILE_SIZE_MB ?? 15),
 
+  // File storage. "local" writes to the filesystem (served from /uploads) and is
+  // the default for development. "s3" targets any S3-compatible object store —
+  // Cloudflare R2, AWS S3, MinIO, ... — which is what production deployments use
+  // since serverless/container filesystems are ephemeral. The driver defaults to
+  // "s3" automatically whenever a bucket is configured.
+  storage: {
+    driver:
+      (process.env.STORAGE_DRIVER as "local" | "s3" | undefined) ??
+      (process.env.S3_BUCKET ? "s3" : "local"),
+    endpoint: process.env.S3_ENDPOINT || undefined, // e.g. https://<acct>.r2.cloudflarestorage.com
+    region: process.env.S3_REGION || "auto", // R2 uses "auto"
+    bucket: process.env.S3_BUCKET || "",
+    accessKeyId: process.env.S3_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
+    // Public base URL files are served from (R2 public bucket / custom domain /
+    // CDN). Required in s3 mode so stored objects resolve to a fetchable URL.
+    publicUrl: (process.env.S3_PUBLIC_URL || "").replace(/\/$/, ""),
+    // MinIO and some setups need path-style addressing; R2/S3 use virtual-host.
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+  },
+
   smtp: {
     host: process.env.SMTP_HOST || null,
     port: Number(process.env.SMTP_PORT ?? 587),

@@ -1,0 +1,69 @@
+# Local development infrastructure for Smart Notes.
+#
+#   docker compose up -d                 # Postgres only (default; storage stays on local disk)
+#   docker compose --profile s3 up -d    # Postgres + MinIO (to exercise the S3/R2 storage path)
+#
+# Host ports are deliberately non-standard (5434 / 9100 / 9101) to avoid clashing
+# with other Postgres/MinIO instances you may already be running. Override any of
+# them via a root .env file or your shell environment.
+name: smartnotes
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-smartnotes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartnotes}
+      POSTGRES_DB: ${POSTGRES_DB:-smartnotes}
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - sn_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smartnotes} -d ${POSTGRES_DB:-smartnotes}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # S3-compatible object storage, used to exercise the production "s3" storage
+  # driver locally (it mirrors how Cloudflare R2 behaves). Opt in with:
+  #   docker compose --profile s3 up -d
+  minio:
+    image: minio/minio
+    profiles: ["s3"]
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9100}:9000"      # S3 API
+      - "${MINIO_CONSOLE_PORT:-9101}:9001"  # web console
+    volumes:
+      - sn_miniodata:/data
+
+  # One-shot: creates the bucket and makes it publicly readable (so object URLs
+  # resolve the same way an R2 public bucket does), then exits.
+  minio-init:
+    image: minio/mc
+    profiles: ["s3"]
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-smartnotes}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do
+        echo 'waiting for minio...'; sleep 1;
+      done;
+      mc mb -p \"local/$$S3_BUCKET\" || true;
+      mc anonymous set download \"local/$$S3_BUCKET\";
+      echo 'bucket ready';
+      "
+
+volumes:
+  sn_pgdata:
+  sn_miniodata:

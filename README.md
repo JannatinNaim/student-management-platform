@@ -2,7 +2,7 @@
 
 A production-grade full-stack platform where students upload, discover, rate, bookmark and discuss study notes — with gamification, study tools and a full admin panel.
 
-**Stack:** Next.js 15 · React 19 · TypeScript · Tailwind CSS · Framer Motion · React Query · Zustand · Express · Prisma · SQLite · JWT + Google OAuth · local file storage
+**Stack:** Next.js 15 · React 19 · TypeScript · Tailwind CSS · Framer Motion · React Query · Zustand · Express · Socket.io · Prisma · PostgreSQL · JWT + Google OAuth · S3/R2 object storage (local FS in dev)
 
 ---
 
@@ -27,22 +27,30 @@ A production-grade full-stack platform where students upload, discover, rate, bo
 
 ## 🚀 Quick Start
 
-**Prerequisites:** Node.js ≥ 20 — that's it. The database is file-based SQLite, so no Docker or external DB server is required.
+**Prerequisites:** Node.js ≥ 20 and Docker (for the local PostgreSQL database).
 
 ```bash
 git clone https://github.com/JannatinNaim/student-management-platform.git
 cd student-management-platform
+docker compose up -d   # starts PostgreSQL on localhost:5434
 npm run dev
 ```
 
-That single `npm run dev` is the whole setup. On first run it bootstraps everything automatically (and skips each step on later runs):
+`docker compose up -d` brings up the local database; the single `npm run dev`
+that follows is the rest of the setup. On first run it bootstraps everything
+automatically (and skips each step on later runs):
 
 1. installs dependencies (root + server + web via npm workspaces)
 2. creates `server/.env` and `web/.env.local` from the committed `.example` templates
 3. generates the Prisma client
-4. applies migrations — creates `server/prisma/dev.db`
+4. applies migrations against the Postgres database
 5. seeds reference data (subjects, achievements, admin user)
 6. starts the API and web app together
+
+> Files are stored on the local filesystem in development (`STORAGE_DRIVER=local`).
+> To exercise the production object-storage path locally, run
+> `docker compose --profile s3 up -d` (starts MinIO) and set the `S3_*` vars in
+> `server/.env` per the example — see the MinIO block there.
 
 - Web: **http://localhost:3000**
 - API: **http://localhost:4000** (health check at `/health`)
@@ -67,7 +75,7 @@ The platform starts fresh — no demo users or notes. Register any account to st
 smart-notes/
 ├── server/                     # Express + Prisma API
 │   ├── prisma/schema.prisma    # 17 models: users, notes, ratings, likes, ...
-│   ├── prisma/dev.db           # SQLite database file (created by migrate)
+│   ├── prisma/migrations/      # PostgreSQL migrations (applied by migrate deploy)
 │   ├── prisma/seed.ts          # Subjects, achievements, admin
 │   └── src/
 │       ├── app.ts              # Express app: helmet, CORS, routes
@@ -95,9 +103,11 @@ smart-notes/
 
 | Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | SQLite file path (default `file:./dev.db`) |
+| `DATABASE_URL` | PostgreSQL connection string (local default points at the docker-compose DB) |
 | `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | Long random strings (≥32 chars) |
-| `CLIENT_URL` | Frontend origin for CORS + email links |
+| `CLIENT_URL` | Frontend origin(s) for CORS + email links (comma-separated) |
+| `STORAGE_DRIVER` | `local` (filesystem) or `s3` (object storage); auto-`s3` when `S3_BUCKET` is set |
+| `S3_*` | S3-compatible storage (Cloudflare R2 / AWS S3 / MinIO) — required when `STORAGE_DRIVER=s3` |
 | `GOOGLE_CLIENT_ID` | Enables Google Sign-In (optional) |
 | `SMTP_*` | Email delivery — leave blank to log emails to console (dev) |
 | `MAX_FILE_SIZE_MB` | Upload size cap (default 15) |
@@ -217,16 +227,35 @@ via the navbar toggle.
 
 ## 🏭 Production Deployment
 
-1. **Database** — SQLite works out of the box on a host with a persistent disk; run `npx prisma migrate deploy`. For a managed/serverless DB, switch the `datasource` provider in `schema.prisma` (e.g. to `postgresql`) and set `DATABASE_URL` accordingly.
-2. **API** — Railway/Render: build `npm run build -w server`, start `node server/dist/index.js`. Set `NODE_ENV=production`, real JWT secrets, SMTP creds, `CLIENT_URL=https://your-app.vercel.app`. Uploads are written to the local `server/uploads` dir, so attach a persistent disk.
-3. **Web** — Vercel: root dir `web`, set `NEXT_PUBLIC_API_URL` to the API URL.
-4. Refresh-token cookies use `SameSite=None; Secure` in production, so both apps must be served over HTTPS.
+The stack is built to glue together free-tier managed services: **Vercel**
+(web) + **Render** (API, long-running for Socket.io) + **Neon/Supabase/Render
+Postgres** (database) + **Cloudflare R2** (file storage).
+
+1. **Database** — provision managed Postgres (Neon, Supabase, or the Render
+   Postgres in [`render.yaml`](render.yaml)) and set `DATABASE_URL` to its
+   connection string. Migrations apply automatically on container start.
+2. **File storage** — create a Cloudflare R2 bucket with public access, then set
+   `STORAGE_DRIVER=s3` plus the `S3_*` vars (endpoint, bucket, keys, public URL).
+   See [`server/.env.example`](server/.env.example) for the exact R2 values.
+3. **API** — Render (or any long-running host — **not** serverless, because the
+   Socket.io realtime layer needs a persistent process). The
+   [`render.yaml`](render.yaml) blueprint builds [`server/Dockerfile`](server/Dockerfile),
+   which runs `prisma migrate deploy` + seed then starts the server. Set
+   `NODE_ENV=production`, JWT secrets, `CLIENT_URL=https://your-app.vercel.app`,
+   and the `S3_*` vars.
+4. **Web** — Vercel: root dir `web`, set `NEXT_PUBLIC_API_URL` to the API URL.
+5. Refresh-token cookies use `SameSite=None; Secure` in production, so both apps
+   must be served over HTTPS (Vercel + Render both provide this).
+
+> Free-tier caveats: Render's free web service and Postgres sleep / expire after
+> inactivity (cold starts, ~30-day DB lifetime) — fine for a demo, bump the plans
+> for anything long-lived.
 
 ### Hardening checklist
 - Rotate `SEED_ADMIN_PASSWORD`, JWT secrets
 - Put the API behind a CDN/WAF; rate limits are already in place
 - Add a real antivirus scan (ClamAV/S3 scanning) on top of the built-in magic-byte checks
-- Back up the SQLite `dev.db` file (or your managed DB)
+- Use managed Postgres backups; scope the R2 access key to the single bucket
 
 ---
 

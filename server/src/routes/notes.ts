@@ -4,7 +4,14 @@ import path from "path";
 import { z } from "zod";
 import { awardPoints, checkAchievements, POINTS } from "../lib/gamification";
 import { prisma } from "../lib/prisma";
-import { deleteFile, fileHash, storeFile, UPLOAD_DIR } from "../lib/storage";
+import {
+  deleteFile,
+  fileHash,
+  getRemoteObject,
+  isLocalUrl,
+  localPathForUrl,
+  storeFile,
+} from "../lib/storage";
 import { optionalAuth, requireAuth } from "../middleware/auth";
 import { ApiError, asyncHandler } from "../middleware/error";
 import { uploadLimiter } from "../middleware/rateLimit";
@@ -241,7 +248,7 @@ router.post(
       });
     }
 
-    const stored = await storeFile(file.buffer, file.originalname, "notes");
+    const stored = await storeFile(file.buffer, file.originalname, "notes", inspected.mime);
     const storedThumb = thumbnail
       ? await storeFile(thumbnail.buffer, thumbnail.originalname, "thumbnails")
       : null;
@@ -384,20 +391,36 @@ router.get(
       (note.status === "PUBLISHED" ||
         req.user?.role === "ADMIN" ||
         note.authorId === req.user?.id);
-    if (!note || !visible || !note.fileUrl?.startsWith("/uploads/")) {
-      throw ApiError.notFound("File not available");
-    }
-
-    const target = path.resolve(UPLOAD_DIR, note.fileUrl.replace(/^\/uploads\//, ""));
-    // Guard against path traversal in stored URLs.
-    if (!target.startsWith(UPLOAD_DIR + path.sep)) {
+    if (!note || !visible || !note.fileUrl) {
       throw ApiError.notFound("File not available");
     }
 
     const ext = path.extname(note.fileUrl);
     const base = note.title.replace(/[^\w.\- ]+/g, "").trim().slice(0, 80) || "note";
-    res.download(target, `${base}${ext}`, (err) => {
-      if (err && !res.headersSent) res.status(404).json({ success: false, error: { message: "File not available" } });
+    const filename = `${base}${ext}`;
+
+    // Local backend: stream straight from disk (supports range requests etc.).
+    if (isLocalUrl(note.fileUrl)) {
+      const target = localPathForUrl(note.fileUrl);
+      if (!target) throw ApiError.notFound("File not available");
+      res.download(target, filename, (err) => {
+        if (err && !res.headersSent)
+          res.status(404).json({ success: false, error: { message: "File not available" } });
+      });
+      return;
+    }
+
+    // Remote (S3/R2) backend: fetch the object and relay it as an attachment so
+    // the friendly filename and the access checks above are preserved.
+    const object = await getRemoteObject(note.fileUrl);
+    if (!object) throw ApiError.notFound("File not available");
+    res.setHeader("Content-Type", object.contentType ?? "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    if (object.contentLength) res.setHeader("Content-Length", String(object.contentLength));
+    object.body.pipe(res);
+    object.body.on("error", () => {
+      if (!res.headersSent)
+        res.status(404).json({ success: false, error: { message: "File not available" } });
     });
   })
 );

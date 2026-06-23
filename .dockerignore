@@ -1,0 +1,12 @@
+**/node_modules
+.git
+.gitignore
+**/.next
+server/dist
+server/uploads
+server/prisma/*.db
+server/prisma/*.db-journal
+**/*.log
+**/.env
+**/.env.local
+*.md

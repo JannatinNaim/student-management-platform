@@ -3,12 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// NOTE: SQLite does not support Prisma enums, so these are stored as plain
-// strings. Allowed values are kept in sync with the app code:
+// NOTE: enums are stored as plain strings (a legacy of the original SQLite
+// schema, kept on Postgres to avoid a destructive migration). Allowed values
+// are kept in sync with the app code:
 //   Role             -> "STUDENT" | "ADMIN"
 //   NoteType         -> "PDF" | "IMAGE" | "HANDWRITTEN"
 //   NoteStatus       -> "PUBLISHED" | "FLAGGED" | "REMOVED"
